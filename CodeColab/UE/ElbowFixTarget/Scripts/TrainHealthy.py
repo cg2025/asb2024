@@ -2,12 +2,12 @@ import numpy as np
 import skvideo.io
 import os, pickle, glob, time, math
 import gym
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import myosuite
 import mujoco
 from datetime import datetime
 from base64 import b64encode
-from IPython.display import HTML
+#from IPython.display import HTML
 import sys
 import torch
 import torch.nn as nn
@@ -56,24 +56,27 @@ def main(env_name,train_steps, run_id, weight_value, target_value):
     log_f = open(log_f_name,"w+")
     log_f.write('episode,timestep,reward\n')
     # printing and logging variables
-    print_running_reward,print_running_episodes = 0,0
-    log_running_reward,log_running_episodes = 0,0
-    time_step,i_episode = 0,0
+    print_running_reward,print_running_episodes = 0,1
+    log_running_reward,log_running_episodes = 0,1
+    time_step,i_episode = 0,1
 
     # training loop
     while time_step <= p['max_training_timesteps']: 
         state = env.reset()
         if weight_value=="-1":
-            weight = np.random.choice(np.arange(1,6),1) # between 1 to 5 kg
+            #weight = np.random.choice(np.arange(1,6),1) # between 1 to 5 kg
+            weight = np.random.randint(low=1, high=6) # Return random integers from low (inclusive) to high (exclusive).
         else:
             weight = float(weight_value)
         
         if target_value=="-1":
-            target = np.random.choice(np.arange(5,22),1)*0.1
+            #target = np.random.choice(np.arange(5,22),1)*0.1  
+            target = np.random.uniform(low=0, high=2.25) # Range from [0, 2.26893], but using 2.25 rad to prevent over flexion
         else:
             target = float(target_value)
 
         #print(target, weight)
+        #print(env.env.sim.model.body_mass[5])
         env.env.sim.model.body_mass[5] = weight *1.0
         env.env.sim_obsd.model.body_mass[5] = weight * 1.0
         env.env.sim.data.qpos[0]=0 # angle error
@@ -109,6 +112,8 @@ def main(env_name,train_steps, run_id, weight_value, target_value):
             # if continuous action space; then decay action std of ouput action distribution
             if p['has_continuous_action_space'] and time_step % p['action_std_decay_freq'] == 0:
                 ppo_agent.decay_action_std(p['action_std_decay_rate'], p['min_action_std'])
+
+            print(f"t : {t}, log_running_episodes: {log_running_episodes} and print_running_episodes: {print_running_episodes}")
 
             # log in logging file
             if time_step % p['log_freq'] == 0:

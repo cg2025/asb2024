@@ -166,7 +166,8 @@ def printReward(reward,episodes,i_episode, time_step):
     print_avg_reward = reward / episodes
     print_avg_reward = round(print_avg_reward, 2)
     print("Episode : {} \t Timestep : {} \t Average Reward : {}".format(i_episode, time_step, print_avg_reward))
-    return 0, 0
+    #return 0, 0
+    return reward, episodes
 
 def printModelSaved(checkpoint_path, start_time):
     print("--------------------------------------------------------------------------------------------")
@@ -182,7 +183,8 @@ def printLogs(log_f, reward,episodes,i_episode, time_step):
 
     log_f.write('{},{},{}\n'.format(i_episode, time_step, log_avg_reward))
     log_f.flush()
-    return 0, 0
+    #return 0, 0
+    return reward, episodes
 
 def scaleAction(act2,ctrl_lo,ctrl_hi):
     return (act2)* (ctrl_hi-ctrl_lo)/2+  (ctrl_hi+ctrl_lo)/2
