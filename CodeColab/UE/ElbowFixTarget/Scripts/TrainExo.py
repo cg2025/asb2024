@@ -39,14 +39,10 @@ def main(env_name, train_steps, run_id, weight_value, target_value, ctrl_value, 
     hlthy_agent.load(hlthy_policy_path)
 
     # initialize a PPO agent
-    env_name_2 = ""
-    if not(registered):
-        env_name_2 = utils.register_env(p,exo,sarc)
-    else:
-        env_name_2= utils.get_env_prefix(exo,sarc)+p['new_model_nm']
-
-    env = gym.make(env_name_2)
+    env_name_2 = utils.get_env_prefix(exo,sarc)+p['new_model_nm']
+    env = gym.make(env_name, normalize_act=False, muscle_condition='sarcopenia',reset_type='init')
     env.reset()
+
     state_dim  = 10 
     action_dim = 1
     ppo_agent = PPO(state_dim, action_dim, p['lr_actor'], p['lr_critic'], p['gamma'], p['K_epochs'], p['eps_clip'], p['has_continuous_action_space'], p['action_std'])
@@ -79,7 +75,7 @@ def main(env_name, train_steps, run_id, weight_value, target_value, ctrl_value, 
             weight = float(weight_value)
         
         if target_value=="-1":
-            target = np.random.choice(np.arange(5,22),1)*0.1
+            target = np.random.uniform(high=env.sim.model.jnt_range[:,1], low=env.sim.model.jnt_range[:,0])
         else:
             target = float(target_value)
 
