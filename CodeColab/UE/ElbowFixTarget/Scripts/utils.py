@@ -9,31 +9,31 @@ from myosuite.envs.env_variants import register_env_variant
 path = 'UE/ElbowFixTarget/'
 env_name='myoElbowPose1D6MExoRandom-v0'
 
-def init_logpath(env_name_2,run_id,p, suffix=""):
+def init_logpath(env_name_2,run_id,weight_value, target_value, p, suffix=""):
     ###################### logging ######################
     if suffix!="":
         suffix = "_"+suffix
     log_dir = p['work_dir']+'logs/'
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
-    log_f_name = log_dir + 'PPO_' + env_name_2 + "_log_" + run_id +suffix+ ".csv"
+    log_f_name = log_dir + 'PPO_' + env_name_2 + "_"+run_id+ weight_value + "_"+ target_value+ "_" +suffix+ ".csv" 
     print("logging at : " + log_f_name)
     return log_f_name
 
-def init_policypath(env_name_2,run_id,p, suffix=""):
+def init_policypath(env_name_2,run_id,weight_value, target_value, p, suffix=""):
     ################### checkpointing ###################
     if suffix!="":
         suffix = "_"+suffix
     directory = p['work_dir']+'Policies/'
     if not os.path.exists(directory):
         os.makedirs(directory)
-    checkpoint_path = directory + 'PPO_' + env_name_2 + "_"+run_id+suffix+ ".pth" 
+    checkpoint_path = directory + 'PPO_' + env_name_2 + "_"+run_id+ weight_value + "_"+ target_value+ "_" +suffix+ ".pth" 
     print("policy path : " + checkpoint_path)
     return checkpoint_path
 
 def get_healthypolicypath(p,run_id):
     directory = p['work_dir']+'Policies/'
-    healthy_policy_path = directory + "PPO_{}_{}.pth".format(env_name, run_id)
+    healthy_policy_path = directory + "PPO_{}_{}.pth".format(env_name_2,run_id,weight_value, target_value)
     print("Load Healthy Policy from : " + healthy_policy_path)
     return healthy_policy_path
 

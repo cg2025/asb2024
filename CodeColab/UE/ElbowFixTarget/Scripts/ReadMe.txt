@@ -8,7 +8,8 @@ python -m CodeColab.UE.ElbowFixTarget.Scripts.TrainHealthy tgtrnd -1 -1 100000
 4. train_steps : specify number of training steps
 
 ## Command line execution example
-python -m CodeColab.UE.ElbowFixTarget.Scripts.TrainExo tgtrnd -1 -1 100000
+python -m CodeColab.UE.ElbowFixTarget.Scripts.TrainHealthy tgtrnd 5 -1 1000000
+python -m CodeColab.UE.ElbowFixTarget.Scripts.Hlty_Evaluation tgtrnd -1 -1 1000000
 
 Same argument set as above
 Exo control parameters are specified inside the code as a list of values (bottom of the code)

@@ -41,7 +41,7 @@ class ElbowFlex(gymnasium.Env):
 
         """
 
-        pathAndModel = '/new_model/gait14dof22musc_cvt3_Right_Toeless_3D.xml'
+        pathAndModel = '/myosuite/simhive/myo_sim/elbow/assets/myoelbow_1dof6muscles_1dofexo_body.xml'
         env_name = 'myoElbowPose1D6MExoRandom-v0'
         
         """
@@ -156,51 +156,13 @@ class ElbowFlex(gymnasium.Env):
         
         #obs_dict['v_tgt_field'] = np.ndarray.flatten(self.v_tgt_field.copy())
         obs_dict['v_tgt'] = self.get_target_vel()
-        #obs_dict['reflex_action'] = current_action.copy()
-        
-        #if self.obs_param is not None:
-        #    if 'spinal_phase' in self.obs_param:
-        #        temp_spinal_control_phase = copy.deepcopy(getattr(self.ReflexCtrl, 'spinal_control_phase'))
-        #        out_vec = []
-        #        for key in temp_spinal_control_phase.keys():
-        #            if key == 'r_leg' or key == 'l_leg':
-        #                for subkey in temp_spinal_control_phase[key]:
-        #                    out_vec.append(np.int32(temp_spinal_control_phase[key][subkey]))
 
-        #        obs_dict['spinal_ctr_ph'] = np.array(out_vec, dtype=np.int32)
+        obs_dict['r_elbow_flex'] = self.MyoEnv.env.sim.data.joint('r_elbow_flex').qpos.copy()
+        obs_dict['r_elbow_flex_qvel'] = self.MyoEnv.env.env.sim.data.qvel[0].copy()
 
-        obs_dict['pelvis_height'] = self.MyoEnv.env.sim.data.joint('pelvis_ty').qpos.copy()
-        obs_dict['pelvis_euler'] = self._get_pel_angle() # Local body frame Euler angles
-        obs_dict['pelvis_euler_vel'] = self._get_pel_angle_vel()#*self.dt # Local angular velocity
-        obs_dict['pelvis_xvel'] = self.get_pel_xvel()#*self.dt
-        
         if self.obs_param is not None:
             if 'mus_act' in self.obs_param:
                 obs_dict['mus_act'] = self._get_muscle_act()
-
-        obs_dict['r_leg'] = {}
-        obs_dict['l_leg'] = {}
-
-        for s_leg in ['r_leg', 'l_leg']:
-
-            # Joint angles
-            if self.mode == '3D':
-                obs_dict[s_leg][f"hip_add_{s_leg[0]}"] = self.MyoEnv.env.sim.data.joint(f"hip_adduction_{s_leg[0]}").qpos.copy()
-            
-            obs_dict[s_leg][f"hip_flexion_{s_leg[0]}"] = self.MyoEnv.env.sim.data.joint(f"hip_flexion_{s_leg[0]}").qpos.copy()
-            obs_dict[s_leg][f"knee_angle_{s_leg[0]}"] = self.MyoEnv.env.sim.data.joint(f"knee_angle_{s_leg[0]}").qpos.copy()
-            obs_dict[s_leg][f"ankle_angle_{s_leg[0]}"] = self.MyoEnv.env.sim.data.joint(f"ankle_angle_{s_leg[0]}").qpos.copy()
-
-            if self.mode == '3D':
-                obs_dict[s_leg][f"vel_hip_add_{s_leg[0]}"] = self.MyoEnv.env.sim.data.joint(f"hip_adduction_{s_leg[0]}").qvel.copy()
-
-            obs_dict[s_leg][f"vel_hip_flexion_{s_leg[0]}"] = self.MyoEnv.env.sim.data.joint(f"hip_flexion_{s_leg[0]}").qvel.copy()
-            obs_dict[s_leg][f"vel_knee_angle_{s_leg[0]}"] = self.MyoEnv.env.sim.data.joint(f"knee_angle_{s_leg[0]}").qvel.copy()
-            obs_dict[s_leg][f"vel_ankle_angle_{s_leg[0]}"] = self.MyoEnv.env.sim.data.joint(f"ankle_angle_{s_leg[0]}").qvel.copy()
-
-            temp_GRF = (self.MyoEnv.env.sim.data.sensor(f"{s_leg[0]}_foot").data[0].copy() + self.MyoEnv.env.sim.data.sensor(f"{s_leg[0]}_toes").data[0].copy())
-            obs_dict[s_leg][f"GRF_{s_leg[0]}"] = temp_GRF / (np.sum(self.MyoEnv.env.sim.model.body_mass)*9.8)
-
 
         return obs_dict
 

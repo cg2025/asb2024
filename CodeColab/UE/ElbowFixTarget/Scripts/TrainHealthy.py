@@ -27,7 +27,7 @@ def main(env_name,train_steps, run_id, weight_value, target_value):
     sarc = False
     #########################  Change the following to match your run
     p = utils.init_parameters(train_steps=train_steps)
-    retrainExistingPolicy = False
+    retrainExistingPolicy = True
 
     env_name_2 = utils.get_env_prefix(exo,sarc)+p['new_model_nm']
     env = gym.make(env_name, normalize_act=False,reset_type='init')
@@ -47,8 +47,8 @@ def main(env_name,train_steps, run_id, weight_value, target_value):
     print("Started training at (GMT) : ", start_time)
     print("============================================================================================")
 
-    log_f_name = utils.init_logpath(env_name_2,run_id,p)
-    checkpoint_path = utils.init_policypath(env_name_2,run_id,p)
+    log_f_name = utils.init_logpath(env_name_2,run_id,weight_value, target_value, p)
+    checkpoint_path = utils.init_policypath(env_name_2,run_id,weight_value, target_value, p)
     if retrainExistingPolicy:
         ppo_agent.load(checkpoint_path)
 
