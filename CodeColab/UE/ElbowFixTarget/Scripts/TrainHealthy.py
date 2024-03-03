@@ -27,7 +27,7 @@ def main(env_name,train_steps, run_id, weight_value, target_value):
     sarc = False
     #########################  Change the following to match your run
     p = utils.init_parameters(train_steps=train_steps)
-    retrainExistingPolicy = False
+    retrainExistingPolicy = True
 
     env_name_2 = utils.register_env(p,exo,sarc)
     env = gym.make(env_name_2)
@@ -37,7 +37,7 @@ def main(env_name,train_steps, run_id, weight_value, target_value):
     print("training environment name : " + env_name_2)
 
     # dimensions
-    state_dim = 9 # Joint angle and velocity
+    state_dim = 10 # Joint angle and velocity
     action_dim = 6 # muscle actions without Exo
 
     # initialize a PPO agent default action is within [0,1]
@@ -86,7 +86,7 @@ def main(env_name,train_steps, run_id, weight_value, target_value):
         #state[2]= state[0].copy()-target
         current_ep_reward = 0
         # obs[2] contains the error
-        obs= np.concatenate((state[:2],state[0]-target,state[3:]),axis=None)
+        obs= np.concatenate((state[:2],state[0]-target,target,state[3:]),axis=None)
         done = False
         for t in range(1, p['max_ep_len']+1):
             mus_action =  ppo_agent.select_action(obs)
@@ -96,7 +96,7 @@ def main(env_name,train_steps, run_id, weight_value, target_value):
             state, _, _, _ = env.step(action)
             error = env.env.sim.data.joint('r_elbow_flex').qpos.item(0)-target
             reward = utils.get_reward(obs[2],error) # obs[2] is the old error
-            obs = np.concatenate((state[:2],error,state[3:]),axis=None)#np.append(state,target_angle) # this is 9 dimension does not include exo
+            obs = np.concatenate((state[:2],error,target,state[3:]),axis=None)#np.append(state,target_angle) # this is 9 dimension does not include exo
             ppo_agent.buffer.rewards.append(reward)
             if t==p['max_ep_len']:
                 done = True
@@ -113,7 +113,7 @@ def main(env_name,train_steps, run_id, weight_value, target_value):
             if p['has_continuous_action_space'] and time_step % p['action_std_decay_freq'] == 0:
                 ppo_agent.decay_action_std(p['action_std_decay_rate'], p['min_action_std'])
 
-            print(f"t : {t}, log_running_episodes: {log_running_episodes} and print_running_episodes: {print_running_episodes}")
+            #print(f"t : {t}, log_running_episodes: {log_running_episodes} and print_running_episodes: {print_running_episodes}")
 
             # log in logging file
             if time_step % p['log_freq'] == 0:
