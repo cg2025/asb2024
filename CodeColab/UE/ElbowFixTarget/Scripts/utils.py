@@ -113,11 +113,11 @@ def get_target_pose(env,target):
 
 
 ############# reward function #################
-def get_reward(old_err,new_err):
-    #oe, ne = abs(old_err),  abs(new_err)
-    # First reach near target and then get additional reward for staying there
-    r= np.exp(-1*np.square(new_err))#+ (10 * (oe > ne)+ oe-ne)*(oe<0.1)
-    return r
+def get_reward(current,target,terminated):
+    reward = np.exp(-1*np.square(current-target))
+    if terminated:
+        reward=reward+100
+    return reward
 
 def get_reward_err_delta(old_err,new_err):
     oe, ne = abs(old_err),  abs(new_err)

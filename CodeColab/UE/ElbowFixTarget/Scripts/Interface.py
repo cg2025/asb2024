@@ -27,7 +27,10 @@ class ElbowFlex(gymnasium.Env):
         #"act_reg": 1.0,
         #"penalty": 50,
    #}
-    def __init__(self, episode_limit=1000, seed=0):
+    global weight
+    global target
+    global ctrlp
+    def __init__(self, episode_limit=1000, seed=0, trainMode =True, weight = 0, target = -1, ctrlp=10):
         self.seed=seed
         self.time_step=1
         self.episode_limit=episode_limit
@@ -49,7 +52,7 @@ class ElbowFlex(gymnasium.Env):
         #self.MyoEnv.seed(self.seed)
         self.rng_gen = np.random
         self.rng_gen.seed(self.seed)
-
+        
         """
         Custom Environment initialization for StableBaseline3
         """
@@ -60,7 +63,7 @@ class ElbowFlex(gymnasium.Env):
         # Define your Observation space:
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(10,), dtype=np.float32)
         
-    
+        self.train = trainMode
         """
         Target angle for testing
         """
@@ -77,7 +80,10 @@ class ElbowFlex(gymnasium.Env):
         info = {}
         self.MyoEnv.env.sim.data.qpos[0] = 0
         self.MyoEnv.env.sim.data.qvel[0]  = 0
-        self.target_angle= np.random.uniform(high=self.MyoEnv.sim.model.jnt_range[:,1], low=self.MyoEnv.sim.model.jnt_range[:,0])[0]
+        if self.train:
+            self.target_angle= np.random.uniform(high=self.MyoEnv.sim.model.jnt_range[:,1], low=self.MyoEnv.sim.model.jnt_range[:,0])[0]
+        else:
+            self.target_angle = target
         observation=self.get_obs_vec(self.get_obs_dict(np.zeros(self.action_space.shape[0])))
         self.time_step=1
         return observation, info
@@ -92,8 +98,9 @@ class ElbowFlex(gymnasium.Env):
         truncated = False
         if self.time_step > self.episode_limit-1: # Alive for episode, less than ep limit -1 because time_step is incremented at the beginning of the step
             truncated = True
-        if (self.obs_dict['error']<np.deg2rad(2)):
-            terminated = True
+        if self.train:
+            if (self.obs_dict['error']<np.deg2rad(2)):
+                terminated = True
         reward=self.get_reward(terminated, truncated, mus_action)
         self.time_step += 1
          
@@ -107,7 +114,7 @@ class ElbowFlex(gymnasium.Env):
         obs_dict = {}
         obs_dict['elb_angle'] = self.MyoEnv.env.sim.data.qpos[0].copy()
         obs_dict['elb_vel'] = self.MyoEnv.env.sim.data.qvel[0].copy()
-        obs_dict['error']=np.abs(self.MyoEnv.env.sim.data.qpos[0].copy()-self.target_angle)
+        obs_dict['error']=self.MyoEnv.env.sim.data.qpos[0].copy()-self.target_angle
         obs_dict['target']=self.target_angle
         obs_dict['musc_acts']=self.MyoEnv.env.sim.data.act.copy()
         #print(obs_dict['elb_angle'],obs_dict['error'],self.target_angle)

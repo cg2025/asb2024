@@ -1,6 +1,9 @@
 ## Command line execution example
 python -m CodeColab.UE.ElbowFixTarget.Scripts.TrainHealthy tgtrnd -1 -1 1000000
 
+python -m CodeColab.UE.ElbowFixTarget.Scripts.TrainHealthy tgtrnd -1 1000000
+
+
 python -m CodeColab.UE.ElbowFixTarget.Scripts.Evaluation tgtrnd -1 1.5
 
 ## Four arguments are required

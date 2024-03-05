@@ -22,12 +22,13 @@ device = torch.device('cpu')
 
 env_name = 'myoElbowPose1D6MExoRandom-v0'
 
-def main(env_name,train_steps, run_id, weight_value, target_value):
+#def main(env_name,train_steps, run_id, weight_value, target_value):
+def main(env_name,train_steps, run_id, target_value):
     exo = False
     sarc = False
     #########################  Change the following to match your run
     p = utils.init_parameters(train_steps=train_steps)
-    retrainExistingPolicy = True
+    retrainExistingPolicy = False
 
     env_name_2 = utils.register_env(p,exo,sarc)
     env = gym.make(env_name_2)
@@ -63,23 +64,20 @@ def main(env_name,train_steps, run_id, weight_value, target_value):
     # training loop
     while time_step <= p['max_training_timesteps']: 
         state = env.reset()
-        if weight_value=="-1":
-            #weight = np.random.choice(np.arange(1,6),1) # between 1 to 5 kg
-            weight = np.random.randint(low=1, high=6) # Return random integers from low (inclusive) to high (exclusive).
-        else:
-            weight = float(weight_value)
+        #if weight_value=="-1":
+            #weight = np.random.randint(low=1, high=6) # Return random integers from low (inclusive) to high (exclusive).
+        #else:
+            #weight = float(weight_value)
         
         if target_value=="-1":
-            #target = np.random.choice(np.arange(5,22),1)*0.1  
-            target = np.random.uniform(low=0, high=2.25) # Range from [0, 2.26893], but using 2.25 rad to prevent over flexion
+            target = np.random.uniform(high=env.sim.model.jnt_range[:,1], low=env.sim.model.jnt_range[:,0])[0]
         else:
             target = float(target_value)
 
-        #print(target, weight)
-        #print(env.env.sim.model.body_mass[5])
-        env.env.sim.model.body_mass[5] = weight *1.0
-        env.env.sim_obsd.model.body_mass[5] = weight * 1.0
-        env.env.sim.data.qpos[0]=0 # angle error
+        #env.env.sim.model.body_mass[5] = weight *1.0
+        #env.env.sim_obsd.model.body_mass[5] = weight * 1.0
+        env.env.sim.data.qpos[0]=0 
+        env.env.sim.data.qvel[0]=0
         env.env.sim.forward()
         state[0]= env.env.sim.data.qpos[0]
         state[1]= env.env.sim.data.qvel[0]
@@ -92,16 +90,17 @@ def main(env_name,train_steps, run_id, weight_value, target_value):
             mus_action =  ppo_agent.select_action(obs)
             mus_action =utils.scaleAction(mus_action,0,1)
             action = np.append(0, mus_action) # exo action is zero for hlthy
-        
             state, _, _, _ = env.step(action)
-            error = env.env.sim.data.joint('r_elbow_flex').qpos.item(0)-target
-            reward = utils.get_reward(obs[2],error) # obs[2] is the old error
+            error = env.env.sim.data.qpos[0].copy()-target
+            terminated = False
+            if (error<np.deg2rad(2)):
+                terminated = True
+            reward = utils.get_reward(env.env.sim.data.qpos[0].copy(),target, terminated)
             obs = np.concatenate((state[:2],error,target,state[3:]),axis=None)#np.append(state,target_angle) # this is 9 dimension does not include exo
             ppo_agent.buffer.rewards.append(reward)
             if t==p['max_ep_len']:
                 done = True
-            ppo_agent.buffer.is_terminals.append(done)
-            
+            ppo_agent.buffer.is_terminals.append(done)  
             time_step +=1
             current_ep_reward += reward
 
@@ -128,8 +127,8 @@ def main(env_name,train_steps, run_id, weight_value, target_value):
                 ppo_agent.save(checkpoint_path)
                 utils.printModelSaved(checkpoint_path,start_time)
             # break; if the episode is over
-            #if done:
-            #    break
+            if terminated:
+                break
         print_running_reward += current_ep_reward
         print_running_episodes += 1
 
@@ -154,8 +153,9 @@ def main(env_name,train_steps, run_id, weight_value, target_value):
 
 #########################  INPUT Arguments (RUN_ID, WEIGHT, TARGET, TRAIN_STEPS )
 run_id = sys.argv[1] # use this to identify the run parameters
-weight_value  = sys.argv[2] 
-target_value  = sys.argv[3] 
-train_steps  = sys.argv[4] 
+#weight_value  = sys.argv[2] 
+target_value  = sys.argv[2] 
+train_steps  = sys.argv[3] 
 
-main(env_name, train_steps, run_id, weight_value, target_value)
+#main(env_name, train_steps, run_id, weight_value, target_value)
+main(env_name, train_steps, run_id,target_value)

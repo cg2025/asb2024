@@ -13,7 +13,7 @@ parser.add_argument("--chk_freq", type=int, help="(int) Checkpoint Frequency (in
 input_args = parser.parse_args()
 
 register(id="myoElbow-v0", entry_point="CodeColab.UE.ElbowFixTarget.Scripts.Interface:ElbowFlex", max_episode_steps=1000)
-env=gymnasium.make("myoElbow-v0")
+env=gymnasium.make("myoElbow-v0", weight = 0, trainMode = True, target = -1)
 
 model = PPO("MlpPolicy", env, verbose=1)
 checkpoint_callback = CheckpointCallback(save_freq= input_args.chk_freq, save_path='SB3_logs', name_prefix=str('MyoAssist'), save_replay_buffer=False, save_vecnormalize=False)

@@ -42,8 +42,59 @@ def create_env(exo,sarc):
     env.reset()
     return env, env_name_2 
 
+def evaluate2(env_name,  run_id, target_value, weight_value):
+    env_name_2 = 'elbow-v0'
+    p = utils.init_parameters(train_steps = 1e5)
+    env_name_2 = utils.get_env_prefix(False, False)+p['new_model_nm']
+    env = gym.make(env_name, normalize_act=False,reset_type='init')
+    env.reset()
+    file_suffix = ''
+    policy_path='CodeColab/UE/ElbowFixTarget/Policies/'+ 'PPO_elbow-v0_tgtrnd.pth' 
+    log_path='CodeColab/UE/ElbowFixTarget/logs/'+ 'PPO_elbow-v0_log_tgtrnd.csv'
+    #log_path = 'CodeColab/UE/ElbowFixTarget/logs/' 'PPO_' + env_name_2 + "_"+run_id+ weight_value + "_"+ target_value+ "_" +file_suffix+ ".csv" 
+    data_f = open('CodeColab/UE/ElbowFixTarget/ResultsData/'+ env_name_2 + "_2"+run_id+ weight_value + "_"+ target_value+ "_" +file_suffix+ ".csv" ,"w")
+    state_dim=10
+    action_dim=6
+    ppo_agent = PPO(state_dim, action_dim, 0, 0, 1, 1, 0.2, True, 0.1)
+    count = 0
+    t=0
+    frames= []
+    while count <1:
+        obs = env.reset()
+        for t in range(1000):
+        #frame = vec_env.env.sim.renderer.render_offscreen(camera_id=0)
+        #frames.append(frame)
+            mus_action =  ppo_agent.select_action(obs) # 6 muscle activations
+            mus_action =utils.scaleAction(mus_action,0,1)
+            action = np.append(0, mus_action) # exo action is zero for hlthy
+            obs, _, _, _ = env.step(action)
+            #vec_env.render("human")
+            if obs[0][0]!=0:
+                data_f.write(str(count)+","+str(t)+","+str(obs[0][0])+","+
+                        str(obs[0][3])+ ","+str(np.dot(a,a))+'\n')
+            # VecEnv resets automatically
+            if done:
+                count=count+1
+                break   
+    data_f.close()
+   #plotFlexAngleHealthy()
 
-def evaluate(env_name,  run_id, weight_value, target_value):
+def plotFlexAngleHealthy():
+    a = np.loadtxt('CodeColab/UE/ElbowFixTarget/ResultsData/HealthyResults.csv', delimiter=',')
+    plt.figure()
+    #print(heights)
+    #sprint(energy)
+    plt.scatter(a[:,1],a[:,2]) 
+    plt.scatter(a[:,1],a[:,3])        
+    plt.ylabel("Angle of Flex")
+    plt.savefig("CodeColab/UE/ElbowFixTarget/vid_plots/TargetFlexResultsHealthy.png")
+    plt.close()
+
+
+
+#def evaluate(env_name,  run_id, weight_value, target_value):
+def evaluate(env_name,  run_id, target_value):
+
     env_name_2 = 'elbow-v0'
     p = utils.init_parameters(train_steps = 1e5)
     env_name_2 = utils.get_env_prefix(False, False)+p['new_model_nm']
@@ -61,8 +112,7 @@ def evaluate(env_name,  run_id, weight_value, target_value):
     action_dim=6
 
     ppo_agent = PPO(state_dim, action_dim, 0, 0, 1, 1, 0.2, True, 0.1)
-    ppo_agent.load("MyoAssistAgent1")
-
+    #ppo_agent.load("MyoAssistAgent1")
     frames = []
     ep_time = 2 # in seconds
     num_eps = 50
@@ -80,8 +130,8 @@ def evaluate(env_name,  run_id, weight_value, target_value):
 
     for num_ep in range(num_eps):
         state = env.reset()
-        env.env.sim.model.body_mass[5] = weight *1.0
-        env.env.sim_obsd.model.body_mass[5] = weight * 1.0
+        #env.env.sim.model.body_mass[5] = weight *1.0
+        #env.env.sim_obsd.model.body_mass[5] = weight * 1.0
         env.env.sim.data.qpos[0] =0
         env.env.sim.forward()
         done = False
@@ -195,7 +245,7 @@ run_id = sys.argv[1] # use this to identify the run parameters
 weight_value  = sys.argv[2] 
 target_value  = sys.argv[3] 
 
-vid_frames= get_frames(env_name, run_id, weight_value, target_value)
-frames2Video('CodeColab/UE/ElbowFixTarget/vid_plots/healthy'+target_value+'.mp4', vid_frames)
+#vid_frames= get_frames(env_name, run_id, weight_value, target_value)
+#frames2Video('CodeColab/UE/ElbowFixTarget/vid_plots/healthy'+target_value+'.mp4', vid_frames)
 
-#evaluate(env_name,  run_id, weight_value, target_value)
+evaluate(env_name,  run_id, weight_value, target_value)
