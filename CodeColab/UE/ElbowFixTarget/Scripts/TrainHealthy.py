@@ -25,7 +25,6 @@ env_name = 'myoElbowPose1D6MExoRandom-v0'
 def main(env_name,train_steps, run_id, weight_value, target_value):
     exo = False
     sarc = False
-    #########################  Change the following to match your run
     p = utils.init_parameters(train_steps=train_steps)
     retrainExistingPolicy = False
 
